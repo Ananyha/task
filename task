@@ -1,50 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GA Tracking Demo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GA Tracking Demo — Extended</title>
 
   <!-- Google Analytics (GA4) Tag -->
-  <!-- Replace G-XXXXXXX with your Measurement ID -->
+  <!-- REPLACE G-XXXXXXX with your Measurement ID -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
 
+    // Replace the ID below with your Measurement ID
     gtag('config', 'G-XXXXXXX');
   </script>
 
   <style>
-    body { font-family: Arial, sans-serif; padding: 40px; }
-    button {
-      padding: 12px 20px;
-      font-size: 16px;
-      background: #4285f4;
-      border: none;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover { background: #3367d6; }
+    body { font-family: Inter, Roboto, Arial, sans-serif; padding: 32px; max-width:900px; margin:0 auto; }
+    header { display:flex; align-items:center; justify-content:space-between; }
+    .controls { display:flex; gap:12px; margin:18px 0; }
+    button { padding:10px 16px; font-size:15px; border-radius:8px; border:0; cursor:pointer; }
+    .primary { background:#1a73e8; color:#fff }
+    .ghost { background:#f1f3f4 }
+    .card { padding:16px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin-bottom:18px }
+    form input, form button { padding:10px; font-size:14px }
+    .spacer { height:900px; background:linear-gradient(180deg,#fff,#f9fbff); border-radius:8px; margin:12px 0 }
+    footer { margin-top:28px; font-size:13px; color:#555 }
+    a { color:#1a73e8 }
   </style>
 </head>
 <body>
-  <h1>Google Analytics Event Tracking Demo</h1>
-  <p>Click the button below. The click event will be sent to Google Analytics.</p>
+  <header>
+    <h1>GA Tracking Demo — Extended</h1>
+    <small>Replace <code>G-XXXXXXX</code> with your GA4 Measurement ID</small>
+  </header>
 
-  <button id="trackBtn">Click Me</button>
+  <section class="card">
+    <p>Buttons below, form, and page interactions are tracked and sent to Google Analytics as events.</p>
+
+    <div class="controls">
+      <button class="primary" data-action="cta_primary" id="ctaBtn">Primary CTA</button>
+      <button class="ghost" data-action="secondary" id="secondaryBtn">Secondary</button>
+      <button class="ghost" data-action="load_more" id="loadMore">Load more</button>
+      <button class="ghost" data-action="back_to_top" id="topBtn">Back to top</button>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center">
+      <a href="https://example.com/outbound" id="outboundLink" target="_blank" rel="noopener">Outbound link</a>
+      <a href="#internal" id="internalLink">Internal anchor</a>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Subscribe</h3>
+    <form id="subscribeForm">
+      <input type="text" name="name" id="name" placeholder="Your name" required />
+      <input type="email" name="email" id="email" placeholder="you@example.com" required style="margin-left:8px" />
+      <button class="primary" type="submit" style="margin-left:8px">Subscribe</button>
+    </form>
+    <p id="formMsg" style="margin-top:8px"></p>
+  </section>
+
+  <div class="spacer" id="scrollArea">
+    <p style="padding:20px;">Scroll this area — scroll depth will be tracked at 25%, 50%, 75% and 100%.</p>
+  </div>
+
+  <section class="card">
+    <h3>Other interactions</h3>
+    <label><input type="checkbox" id="toggleA" /> Toggle A</label>
+    <label style="margin-left:12px"><input type="checkbox" id="toggleB" /> Toggle B</label>
+  </section>
+
+  <footer>
+    <p>Events sent: <em>button_click</em>, <em>scroll_depth</em>, <em>link_click</em>, <em>form_submit</em>, <em>form_field_change</em>, <em>time_on_page</em>, <em>visibility_change</em></p>
+  </footer>
 
   <script>
-    document.getElementById('trackBtn').addEventListener('click', function () {
-      console.log("Button clicked — sending event to GA");
+    // Helper to send events to GA (gtag must be available)
+    function sendEvent(name, params) {
+      if (typeof gtag === 'function') {
+        gtag('event', name, params || {});
+        console.log('GA event sent:', name, params || {});
+      } else {
+        console.warn('gtag() not available yet — event queued:', name, params || {});
+      }
+    }
 
-      gtag('event', 'button_click', {
-        'event_category': 'interaction',
-        'event_label': 'demo_button',
-        'value': 1
+    // Button clicks (uses data-action attribute and id)
+    document.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = btn.getAttribute('data-action');
+        sendEvent('button_click', { event_category: 'interaction', event_label: action, value: 1 });
+
+        if (action === 'back_to_top') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        if (action === 'load_more') {
+          // simulate loading
+          btn.textContent = 'Loaded';
+          setTimeout(() => btn.textContent = 'Load more', 1500);
+        }
       });
+    });
+
+    // Link click tracking (distinguish outbound vs internal)
+    function isOutbound(url) {
+      try {
+        const u = new URL(url, location.href);
+        return u.hostname !== location.hostname;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    document.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const href = a.getAttribute('href');
+        sendEvent('link_click', { event_category: 'navigation', event_label: href, outbound: isOutbound(href) ? 'true' : 'false' });
+      });
+    });
+
+    // Form submit + field changes
+    const form = document.getElementById('subscribeForm');
+    const formMsg = document.getElementById('formMsg');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = {
+        name: form.name.value,
+        email: form.email.value
+      };
+
+      sendEvent('form_submit', { event_category: 'engagement', event_label: 'subscribe', ...data });
+      formMsg.textContent = 'Thanks! Subscription recorded (demo).';
+    });
+
+    // Track field changes
+    ['name','email'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('change', () => {
+        sendEvent('form_field_change', { event_category: 'engagement', field: id, value: el.value });
+      });
+    });
+
+    // Scroll depth tracking (25/50/75/100) with debounce
+    (function() {
+      const scrollArea = document.getElementById('scrollArea');
+      const thresholds = [25,50,75,100];
+      const hit = new Set();
+
+      function check() {
+        const rect = scrollArea.getBoundingClientRect();
+        const visible = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
+        const total = rect.height;
+        if (total <= 0) return;
+        const percent = Math.round((visible / total) * 100);
+
+        thresholds.forEach(t => {
+          if (percent >= t && !hit.has(t)) {
+            hit.add(t);
+            sendEvent('scroll_depth', { event_category: 'engagement', depth: t });
+          }
+        });
+      }
+
+      let tid;
+      window.addEventListener('scroll', () => { clearTimeout(tid); tid = setTimeout(check, 150); });
+      window.addEventListener('resize', () => { clearTimeout(tid); tid = setTimeout(check, 250); });
+      // initial check
+      setTimeout(check, 300);
+    })();
+
+    // Time on page heartbeat — sends every 15 seconds
+    (function(){
+      let seconds = 0;
+      setInterval(() => {
+        seconds += 15;
+        sendEvent('time_on_page', { seconds });
+      }, 15000);
+
+      // Also send on visibility change (user left tab)
+      document.addEventListener('visibilitychange', () => {
+        sendEvent('visibility_change', { state: document.visibilityState });
+      });
+
+      // send a final event when page unloads
+      window.addEventListener('beforeunload', () => {
+        sendEvent('visibility_change', { state: 'unload' });
+      });
+    })();
+
+    // Checkbox toggles
+    document.getElementById('toggleA').addEventListener('change', (e) => {
+      sendEvent('toggle', { name: 'A', checked: e.target.checked });
+    });
+    document.getElementById('toggleB').addEventListener('change', (e) => {
+      sendEvent('toggle', { name: 'B', checked: e.target.checked });
     });
   </script>
 </body>
