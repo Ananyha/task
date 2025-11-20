@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GA Tracking Demo</title>
+
+  <!-- Google Analytics (GA4) Tag -->
+  <!-- Replace G-XXXXXXX with your Measurement ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXX');
+  </script>
+
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; }
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      background: #4285f4;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #3367d6; }
+  </style>
+</head>
+<body>
+  <h1>Google Analytics Event Tracking Demo</h1>
+  <p>Click the button below. The click event will be sent to Google Analytics.</p>
+
+  <button id="trackBtn">Click Me</button>
+
+  <script>
+    document.getElementById('trackBtn').addEventListener('click', function () {
+      console.log("Button clicked — sending event to GA");
+
+      gtag('event', 'button_click', {
+        'event_category': 'interaction',
+        'event_label': 'demo_button',
+        'value': 1
+      });
+    });
+  </script>
+</body>
+</html>
